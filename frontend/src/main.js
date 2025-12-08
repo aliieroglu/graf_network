@@ -89,6 +89,8 @@ const nodeList = document.getElementById("node-list");
 const edgeList = document.getElementById("edge-list");
 const algoResult = document.getElementById("algo-result");
 const resetBtn = document.getElementById("reset-graph");
+const sidebar = document.getElementById("sidebar");
+const toggleSidebarBtn = document.getElementById("toggle-sidebar");
 
 function renderNodes() {
   nodeList.innerHTML = "";
@@ -128,6 +130,14 @@ function setResult(text, isError = false) {
   algoResult.textContent = text;
   algoResult.style.borderColor = isError ? "#f87171" : "var(--border)";
 }
+
+function toggleSidebar() {
+  const collapsed = sidebar.classList.toggle("collapsed");
+  toggleSidebarBtn.textContent = collapsed ? "Paneli goster" : "Paneli gizle";
+  toggleSidebarBtn.setAttribute("aria-expanded", (!collapsed).toString());
+}
+
+toggleSidebarBtn.addEventListener("click", toggleSidebar);
 
 nodeForm.addEventListener("submit", (e) => {
   e.preventDefault();

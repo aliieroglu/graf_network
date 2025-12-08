@@ -8,17 +8,17 @@
   <script src="https://unpkg.com/vis-network@9.1.2/dist/vis-network.min.js"></script>
 </head>
 <body>
-  <div class="page">
-    <header class="hero">
-      <div>
-        <p class="eyebrow">Sosyal Ag Graf</p>
-        <h1>Hizli deneme arayuzu</h1>
-        <p class="subtitle">Dugum ve kenar ekle, grafi gorsel olarak izle, BFS/DFS calistir.</p>
-      </div>
-      <div class="pill">Frontend-only demo</div>
-    </header>
+  <button id="toggle-sidebar" class="sidebar-toggle" aria-expanded="true">Paneli gizle</button>
+  <div class="layout">
+    <aside id="sidebar" class="sidebar">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">Sosyal Ag Graf</p>
+          <h1>Hizli deneme arayuzu</h1>
+          <p class="subtitle">Dugum ve kenar ekle, BFS/DFS calistir.</p>
+        </div>
+      </header>
 
-    <main class="grid">
       <section class="card">
         <h2>Dugum ekle</h2>
         <form id="node-form" class="stack">
@@ -81,7 +81,9 @@
           </div>
         </div>
       </section>
+    </aside>
 
+    <main class="graph-area">
       <section class="card graph-card">
         <div class="section-heading">
           <h2>Graf gorunumu</h2>

@@ -164,6 +164,10 @@ button.ghost {
 .accordion-toggle .chevron { font-weight: 900; }
 .accordion-panel[hidden] { display: none; }
 .accordion-panel { display: grid; gap: 12px; }
+.inner-toggle {
+  box-shadow: none;
+  margin-bottom: 12px;
+}
 
 .stack { display: flex; flex-direction: column; gap: 10px; }
 
@@ -276,6 +280,7 @@ button.ghost {
   gap: 12px;
   animation: slideIn 180ms ease;
 }
+.selected-row.inline { margin-top: 0; }
 .selected-info { display: flex; align-items: center; gap: 8px; }
 .badge {
   background: var(--accent-2);
@@ -287,6 +292,25 @@ button.ghost {
 }
 .selected-label { color: var(--text); font-weight: 600; }
 .hidden { display: none; }
+
+.node-info-panel { display: grid; gap: 12px; }
+.node-info-panel.hidden { display: none; }
+.node-info-list {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(11, 18, 32, 0.6);
+}
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: var(--muted);
+}
+.info-item strong { color: var(--text); font-weight: 600; }
 
 @keyframes slideIn {
   from { opacity: 0; transform: translateY(-6px); }

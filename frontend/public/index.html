@@ -34,7 +34,9 @@
         <section class="card save-card">
           <div class="section-heading">
             <h2>Kalici kayitlar</h2>
-            <button id="refresh-saves" type="button" class="ghost tiny-btn">Yenile</button>
+            <button id="refresh-saves" type="button" class="ghost tiny-btn" aria-label="Yenile">
+              <ion-icon name="refresh-circle-outline"></ion-icon>
+            </button>
           </div>
           <form id="save-form" class="stack">
             <label>Kayit adi
@@ -235,6 +237,8 @@
     </div>
   </div>
 
+  <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+  <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
   <script src="../src/main.js" type="module"></script>
 </body>
 </html>

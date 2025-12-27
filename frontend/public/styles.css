@@ -253,13 +253,19 @@ a.ghost {
   align-items: center;
   justify-content: center;
   font-weight: 800;
-  color: #fca5a5;
-  border-color: rgba(248, 113, 113, 0.6);
+  color: #ffffff;
+  border-color: rgba(239, 68, 68, 0.9);
+  background: rgba(239, 68, 68, 0.55);
+}
+
+.icon-btn ion-icon {
+  font-size: 18px;
 }
 
 .icon-btn:hover {
-  color: #fecaca;
-  border-color: rgba(248, 113, 113, 0.9);
+  color: #ffffff;
+  border-color: rgba(239, 68, 68, 1);
+  background: rgba(239, 68, 68, 0.75);
 }
 
 .saved-list-wrap {
@@ -274,6 +280,10 @@ a.ghost {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+}
+
+#refresh-saves ion-icon {
+  font-size: 20px;
 }
 
 .simulation-panel {
@@ -488,6 +498,7 @@ a.ghost {
   place-items: center;
   z-index: 30;
 }
+.modal-overlay[hidden] { display: none; }
 
 .modal-card {
   width: min(360px, 90vw);

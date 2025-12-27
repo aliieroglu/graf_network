@@ -860,9 +860,9 @@ function renderSavedList(records) {
     const deleteBtn = document.createElement("button");
     deleteBtn.type = "button";
     deleteBtn.className = "ghost tiny-btn icon-btn";
-    deleteBtn.textContent = "X";
     deleteBtn.setAttribute("aria-label", "Kaydi sil");
     deleteBtn.title = "Sil";
+    deleteBtn.innerHTML = '<ion-icon name="trash-outline"></ion-icon>';
     deleteBtn.addEventListener("click", () => promptDelete(record));
 
     actions.appendChild(loadBtn);

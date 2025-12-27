@@ -1,5 +1,13 @@
-﻿function buildEdgeKey(a, b) {
+function buildEdgeKey(a, b) {
   return [a, b].sort().join("|");
+}
+
+function formatWeight(weight) {
+  if (weight === null || weight === undefined) return "";
+  const num = Number(weight);
+  if (!Number.isFinite(num)) return "";
+  if (Number.isInteger(num)) return String(num);
+  return num.toFixed(4);
 }
 
 export function createVisRenderer(container) {
@@ -72,14 +80,16 @@ export function createVisRenderer(container) {
     if (!network) return;
     nodes.clear();
     edges.clear();
-    graph.nodes.forEach((label, id) => {
+    graph.nodes.forEach((node, id) => {
+      const label = node?.label || id;
       nodes.add({ id, label: `${id}\n${label}` });
     });
     graph.edges.forEach(({ from, to, weight, relationType, key }) => {
+      const weightLabel = formatWeight(weight);
       const edgeLabel =
-        relationType && weight !== null
-          ? `${relationType} (${weight})`
-          : relationType || (weight !== null ? String(weight) : "");
+        relationType && weightLabel
+          ? `${relationType} (${weightLabel})`
+          : relationType || (weightLabel ? weightLabel : "");
       const edgeId = key || buildEdgeKey(from, to) || `e-${edgeCounter++}`;
       edges.add({
         id: edgeId,
@@ -218,3 +228,4 @@ export function createVisRenderer(container) {
     highlightSimulation,
   };
 }
+

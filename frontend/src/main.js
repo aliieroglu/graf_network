@@ -13,14 +13,30 @@ class Graph {
     this.nodes = new Map();
     this.edges = [];
     this.adj = new Map();
+    this.edgeMap = new Map();
   }
 
-  addNode(id, label = "") {
+  addNode(id, label = "", attributes = {}) {
     const key = id.trim();
     if (!key) throw new Error("Dugum kimligi bos olamaz");
     if (this.nodes.has(key)) throw new Error("Bu kimlik zaten var");
-    this.nodes.set(key, label.trim() || key);
+    const nodeLabel = label.trim() || key;
+    const normalized = this.#normalizeAttributes(attributes);
+    this.nodes.set(key, { label: nodeLabel, attributes: normalized });
     this.adj.set(key, new Set());
+  }
+
+  updateNodeAttributes(id, attributes = {}) {
+    const node = this.nodes.get(id);
+    if (!node) throw new Error("Bu dugum yok");
+    const normalized = this.#normalizeAttributes(attributes);
+    const merged = {
+      activity: normalized.activity ?? node.attributes.activity ?? null,
+      interaction: normalized.interaction ?? node.attributes.interaction ?? null,
+      connectionCount: normalized.connectionCount ?? node.attributes.connectionCount ?? null,
+    };
+    this.nodes.set(id, { label: node.label, attributes: merged });
+    this.recalculateWeights();
   }
 
   addEdge(from, to, weight = null, relationType = "") {
@@ -30,20 +46,86 @@ class Graph {
       throw new Error("Once dugumleri ekleyin (kaynak/hedef yok)");
     }
     const key = this.#edgeKey(a, b);
-    if (this.edges.some((e) => e.key === key)) {
+    if (this.edgeMap.has(key)) {
       throw new Error("Bu kenar zaten var");
     }
     this.adj.get(a).add(b);
     this.adj.get(b).add(a);
-    const parsed = this.#parseWeight(weight);
-    this.edges.push({ from: a, to: b, weight: parsed, relationType, key });
+    const edge = { from: a, to: b, weight, relationType, key };
+    this.edges.push(edge);
+    this.edgeMap.set(key, edge);
+    this.recalculateWeights();
   }
 
-  #parseWeight(value) {
+  recalculateWeights() {
+    const updated = [];
+    this.edgeMap.clear();
+    this.edges.forEach((edge) => {
+      const metricsA = this.getNodeMetrics(edge.from);
+      const metricsB = this.getNodeMetrics(edge.to);
+      const weight = this.#calculateWeight(metricsA, metricsB);
+      const next = { ...edge, weight };
+      updated.push(next);
+      this.edgeMap.set(next.key, next);
+    });
+    this.edges = updated;
+  }
+
+  getNodeMetrics(id) {
+    const node = this.nodes.get(id);
+    const attrs = node?.attributes || {};
+    const activity = this.#metricValue(attrs.activity);
+    const interaction = this.#metricValue(attrs.interaction);
+    let connectionCount = attrs.connectionCount;
+    if (!Number.isFinite(connectionCount)) {
+      connectionCount = this.adj.get(id)?.size ?? 0;
+    }
+    return {
+      activity,
+      interaction,
+      connectionCount: this.#metricValue(connectionCount),
+    };
+  }
+
+  getEdgeWeight(from, to) {
+    const key = this.#edgeKey(from, to);
+    const edge = this.edgeMap.get(key);
+    if (!edge) return null;
+    return edge.weight;
+  }
+
+  #metricValue(value, fallback = 0) {
+    if (value === null || value === undefined || value === "") return fallback;
+    const num = Number(value);
+    if (!Number.isFinite(num)) return fallback;
+    return num;
+  }
+
+  #normalizeAttributes(attributes = {}) {
+    return {
+      activity: this.#parseNumber(attributes.activity),
+      interaction: this.#parseNumber(attributes.interaction),
+      connectionCount: this.#parseNumber(attributes.connectionCount),
+    };
+  }
+
+  #parseNumber(value) {
     if (value === null || value === undefined || value === "") return null;
     const num = Number(value);
-    if (Number.isFinite(num)) return num;
-    return null;
+    if (!Number.isFinite(num)) return null;
+    return num;
+  }
+
+  #calculateWeight(aMetrics, bMetrics) {
+    const diffActivity = aMetrics.activity - bMetrics.activity;
+    const diffInteraction = aMetrics.interaction - bMetrics.interaction;
+    const diffConnection = aMetrics.connectionCount - bMetrics.connectionCount;
+    const distance = Math.sqrt(
+      diffActivity * diffActivity
+        + diffInteraction * diffInteraction
+        + diffConnection * diffConnection
+    );
+    return 1 / (1 + distance);
   }
 
   #edgeKey(a, b) {
@@ -51,8 +133,15 @@ class Graph {
   }
 
   getNeighborsSorted(id, reverse = false) {
-    const neighbors = Array.from(this.adj.get(id) || []).sort();
-    return reverse ? neighbors.reverse() : neighbors;
+    const neighbors = Array.from(this.adj.get(id) || []);
+    neighbors.sort((a, b) => {
+      const weightA = this.getEdgeWeight(id, a) ?? 0;
+      const weightB = this.getEdgeWeight(id, b) ?? 0;
+      if (weightA !== weightB) return weightB - weightA;
+      return a.localeCompare(b);
+    });
+    if (reverse) neighbors.reverse();
+    return neighbors;
   }
 
   removeNode(id) {
@@ -64,6 +153,7 @@ class Graph {
       set.delete(key);
     }
     this.edges = this.edges.filter((e) => e.from !== key && e.to !== key);
+    this.recalculateWeights();
   }
 
   removeEdge(from, to) {
@@ -75,12 +165,14 @@ class Graph {
     if (aSet) aSet.delete(to);
     if (bSet) bSet.delete(from);
     if (before === this.edges.length) throw new Error("Bu kenar yok");
+    this.recalculateWeights();
   }
 
   reset() {
     this.nodes.clear();
     this.edges = [];
     this.adj.clear();
+    this.edgeMap.clear();
   }
 }
 
@@ -136,6 +228,9 @@ const nodeInfoId = document.getElementById("node-info-id");
 const nodeInfoName = document.getElementById("node-info-name");
 const nodeInfoDegree = document.getElementById("node-info-degree");
 const nodeInfoNeighbors = document.getElementById("node-info-neighbors");
+const nodeInfoActivity = document.getElementById("node-info-activity");
+const nodeInfoInteraction = document.getElementById("node-info-interaction");
+const nodeInfoConnection = document.getElementById("node-info-connection");
 const deleteNodeInfoBtn = document.getElementById("delete-node-info");
 const uploadedFiles = [];
 const selectedFileOrder = [];
@@ -183,8 +278,9 @@ function renderNodes() {
     nodeList.innerHTML = '<li>Henuz dugum yok</li>';
     return;
   }
-  entries.forEach(([id, label]) => {
+  entries.forEach(([id, node]) => {
     const li = document.createElement("li");
+    const label = node?.label || id;
     li.textContent = `${id} - ${label}`;
     nodeList.appendChild(li);
   });
@@ -198,7 +294,8 @@ function renderEdges() {
   }
   graph.edges.forEach(({ from, to, weight, relationType }) => {
     const li = document.createElement("li");
-    const w = weight === null ? "" : ` (w=${weight})`;
+    const wValue = formatWeight(weight);
+    const w = wValue ? ` (w=${wValue})` : "";
     const rel = relationType ? ` [${relationType}]` : "";
     li.textContent = `${formatEdge(from, to)}${w}${rel}`;
     edgeList.appendChild(li);
@@ -214,6 +311,23 @@ function refreshView() {
 function setResult(text, isError = false) {
   algoResult.textContent = text;
   algoResult.style.borderColor = isError ? "#f87171" : "var(--border)";
+}
+
+function parseNumberField(value, fieldLabel, options = {}) {
+  if (value === null || value === undefined || value === "") {
+    throw new Error(`${fieldLabel} bos olamaz`);
+  }
+  const num = Number(value);
+  if (!Number.isFinite(num)) {
+    throw new Error(`${fieldLabel} sayisal olmali`);
+  }
+  if (options.min !== undefined && num < options.min) {
+    throw new Error(`${fieldLabel} en az ${options.min} olmali`);
+  }
+  if (options.max !== undefined && num > options.max) {
+    throw new Error(`${fieldLabel} en fazla ${options.max} olmali`);
+  }
+  return num;
 }
 
 function renderAlgoResult(order, algorithm, activeIndex = null, emptyMessage = "Hic dugum yok") {
@@ -545,7 +659,8 @@ function updateSelectedUI(item) {
     updateNodeInfo(item.id);
   } else {
     const rel = item.relationType ? ` [${item.relationType}]` : "";
-    const w = item.weight !== null && item.weight !== undefined ? ` (w=${item.weight})` : "";
+    const wValue = formatWeight(item.weight);
+    const w = wValue ? ` (w=${wValue})` : "";
     selectedLabel.textContent = `Kenar: ${formatEdge(item.from, item.to)}${w}${rel}`;
     updateNodeInfo(null);
   }
@@ -583,16 +698,34 @@ function updateNodeInfo(nodeId) {
     nodeInfoName.textContent = "-";
     nodeInfoDegree.textContent = "-";
     nodeInfoNeighbors.textContent = "-";
+    if (nodeInfoActivity) nodeInfoActivity.textContent = "-";
+    if (nodeInfoInteraction) nodeInfoInteraction.textContent = "-";
+    if (nodeInfoConnection) nodeInfoConnection.textContent = "-";
     deleteNodeInfoBtn.disabled = true;
     return;
   }
-  const label = graph.nodes.get(nodeId) || nodeId;
+  const node = graph.nodes.get(nodeId);
+  const label = node?.label || nodeId;
+  const attrs = node?.attributes || {};
   const neighbors = Array.from(graph.adj.get(nodeId) || []).sort();
   nodeInfoLabel.textContent = `Dugum: ${nodeId}`;
   nodeInfoId.textContent = nodeId;
   nodeInfoName.textContent = label;
   nodeInfoDegree.textContent = String(neighbors.length);
   nodeInfoNeighbors.textContent = neighbors.length ? neighbors.join(", ") : "-";
+  if (nodeInfoActivity)
+    nodeInfoActivity.textContent =
+      attrs.activity !== null && attrs.activity !== undefined ? formatWeight(attrs.activity) : "-";
+  if (nodeInfoInteraction)
+    nodeInfoInteraction.textContent =
+      attrs.interaction !== null && attrs.interaction !== undefined
+        ? formatWeight(attrs.interaction)
+        : "-";
+  if (nodeInfoConnection)
+    nodeInfoConnection.textContent =
+      attrs.connectionCount !== null && attrs.connectionCount !== undefined
+        ? String(attrs.connectionCount)
+        : "-";
   deleteNodeInfoBtn.disabled = false;
 }
 
@@ -603,9 +736,13 @@ function toSafeFilename(value, fallback) {
 }
 
 function buildGraphPayloadForSave() {
-  const nodes = Array.from(graph.nodes.entries()).map(([id, label]) => ({
+  graph.recalculateWeights();
+  const nodes = Array.from(graph.nodes.entries()).map(([id, node]) => ({
     id,
-    label,
+    label: node?.label || id,
+    activity: node?.attributes?.activity ?? null,
+    interaction: node?.attributes?.interaction ?? null,
+    connection_count: node?.attributes?.connectionCount ?? null,
   }));
   const edges = graph.edges.map((edge) => ({
     from: edge.from,
@@ -892,7 +1029,14 @@ async function refreshSavedGraphs() {
 function graphPayloadToData(payload) {
   const nodesMap = new Map();
   (payload.nodes || []).forEach((node) => {
-    nodesMap.set(node.id, node.label || node.id);
+    nodesMap.set(node.id, {
+      label: node.label || node.id,
+      attributes: {
+        activity: node.activity ?? null,
+        interaction: node.interaction ?? null,
+        connectionCount: node.connection_count ?? node.connectionCount ?? null,
+      },
+    });
   });
   const edges = (payload.edges || []).map((edge) => ({
     from: edge.from,
@@ -1030,10 +1174,18 @@ nodeForm.addEventListener("submit", (e) => {
   const form = new FormData(nodeForm);
   const id = form.get("id") || "";
   const label = form.get("label") || "";
+  const activity = form.get("activity");
+  const interaction = form.get("interaction");
+  const connection = form.get("connection");
   try {
     stopSimulation(true);
     resetColoringUI();
-    graph.addNode(id, label);
+    const attributes = {
+      activity: parseNumberField(activity, "Aktiflik", { min: 0, max: 1 }),
+      interaction: parseNumberField(interaction, "Etkilesim", { min: 0 }),
+      connectionCount: parseNumberField(connection, "Baglanti sayisi", { min: 0 }),
+    };
+    graph.addNode(id, label, attributes);
     refreshView();
     setResult(`Dugum eklendi: ${id}`);
     nodeForm.reset();
@@ -1047,11 +1199,10 @@ edgeForm.addEventListener("submit", (e) => {
   const form = new FormData(edgeForm);
   const from = form.get("from") || "";
   const to = form.get("to") || "";
-  const weight = form.get("weight");
   try {
     stopSimulation(true);
     resetColoringUI();
-    graph.addEdge(from, to, weight === null ? null : weight);
+    graph.addEdge(from, to);
     refreshView();
     setResult(`Kenar eklendi: ${formatEdge(from, to)}`);
     edgeForm.reset();
@@ -1161,43 +1312,173 @@ mergeBtn.addEventListener("click", async () => {
   }
 });
 
-function parseCsv(text) {
-  const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
-  if (!lines.length) throw new Error("CSV bos");
-  const header = lines.shift().split(",").map((h) => h.trim().toLowerCase());
-  const expected = [
-    "source_id",
-    "source_name",
-    "target_id",
-    "target_name",
-    "relation_type",
-    "relation_degree",
-  ];
-  const isValidHeader =
-    header.length >= expected.length &&
-    expected.every((h, i) => header[i] === h);
-  if (!isValidHeader) throw new Error("CSV basliklari hatali");
+function splitCsvLine(line) {
+  const cells = [];
+  let current = "";
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i += 1) {
+    const char = line[i];
+    if (char === "\"") {
+      if (inQuotes && line[i + 1] === "\"") {
+        current += "\"";
+        i += 1;
+        continue;
+      }
+      inQuotes = !inQuotes;
+      continue;
+    }
+    if (char === "," && !inQuotes) {
+      cells.push(current.trim());
+      current = "";
+      continue;
+    }
+    current += char;
+  }
+  cells.push(current.trim());
+  return cells;
+}
+
+function normalizeHeader(value) {
+  return value.toLowerCase().replace(/\s+/g, "").replace(/[^a-z0-9_]/g, "");
+}
+
+function coerceNumber(value) {
+  if (value === null || value === undefined || value === "") return null;
+  const num = Number(value);
+  if (!Number.isFinite(num)) return null;
+  return num;
+}
+
+function mergeNodeEntry(nodesMap, id, label, attributes) {
+  const existing = nodesMap.get(id);
+  if (!existing) {
+    nodesMap.set(id, { label: label || id, attributes });
+    return;
+  }
+  nodesMap.set(id, {
+    label: existing.label || label || id,
+    attributes: {
+      activity: attributes.activity ?? existing.attributes.activity ?? null,
+      interaction: attributes.interaction ?? existing.attributes.interaction ?? null,
+      connectionCount:
+        attributes.connectionCount ?? existing.attributes.connectionCount ?? null,
+    },
+  });
+}
+
+function parseEdgeCsv(lines, header) {
+  const index = {
+    sourceId: header.indexOf("source_id"),
+    sourceName: header.indexOf("source_name"),
+    targetId: header.indexOf("target_id"),
+    targetName: header.indexOf("target_name"),
+    relationType: header.indexOf("relation_type"),
+    relationDegree: header.indexOf("relation_degree"),
+  };
+  if (Object.values(index).some((value) => value < 0)) {
+    throw new Error("CSV basliklari hatali");
+  }
 
   const nodesMap = new Map();
   const edges = [];
 
   for (const line of lines) {
-    const cols = line.split(",").map((c) => c.trim());
-    if (cols.length < 6) continue;
-    const [sid, sname, tid, tname, rtype, rdeg] = cols;
+    const cols = splitCsvLine(line);
+    const sid = cols[index.sourceId]?.trim();
+    const tid = cols[index.targetId]?.trim();
     if (!sid || !tid) continue;
-    nodesMap.set(sid, sname || sid);
-    nodesMap.set(tid, tname || tid);
-    const weight = Number(rdeg);
+    const sname = cols[index.sourceName] || sid;
+    const tname = cols[index.targetName] || tid;
+    mergeNodeEntry(nodesMap, sid, sname, {
+      activity: null,
+      interaction: null,
+      connectionCount: null,
+    });
+    mergeNodeEntry(nodesMap, tid, tname, {
+      activity: null,
+      interaction: null,
+      connectionCount: null,
+    });
+    const weight = coerceNumber(cols[index.relationDegree]);
     edges.push({
       from: sid,
       to: tid,
-      weight: Number.isFinite(weight) ? weight : null,
-      relationType: rtype || "",
+      weight,
+      relationType: cols[index.relationType] || "",
     });
   }
   if (!edges.length) throw new Error("CSV'de kenar bulunamadi");
   return { nodesMap, edges };
+}
+
+function parseNodeCsv(lines, header) {
+  const idIndex = header.indexOf("dugumid");
+  const activityIndex = header.indexOf("ozellik_i");
+  const interactionIndex = header.indexOf("ozellik_ii");
+  const connectionIndex = header.indexOf("ozellik_iii");
+  const neighborsIndex = header.indexOf("komsular");
+  if ([idIndex, activityIndex, interactionIndex, connectionIndex, neighborsIndex].some((idx) => idx < 0)) {
+    throw new Error("CSV basliklari hatali");
+  }
+
+  const nodesMap = new Map();
+  const edges = [];
+  const edgeSet = new Set();
+
+  for (const line of lines) {
+    const cols = splitCsvLine(line);
+    const nodeId = cols[idIndex]?.trim();
+    if (!nodeId) continue;
+    const activity = coerceNumber(cols[activityIndex]);
+    const interaction = coerceNumber(cols[interactionIndex]);
+    let connectionCount = coerceNumber(cols[connectionIndex]);
+    const neighborRaw = cols[neighborsIndex] || "";
+    const neighborIds = neighborRaw
+      .split(",")
+      .map((value) => value.trim())
+      .filter(Boolean);
+    if (!Number.isFinite(connectionCount)) {
+      connectionCount = neighborIds.length;
+    }
+    mergeNodeEntry(nodesMap, nodeId, nodeId, {
+      activity,
+      interaction,
+      connectionCount,
+    });
+    neighborIds.forEach((neighborId) => {
+      if (!neighborId || neighborId === nodeId) return;
+      mergeNodeEntry(nodesMap, neighborId, neighborId, {
+        activity: null,
+        interaction: null,
+        connectionCount: null,
+      });
+      const key = buildEdgeKey(nodeId, neighborId);
+      if (edgeSet.has(key)) return;
+      edgeSet.add(key);
+      edges.push({
+        from: nodeId,
+        to: neighborId,
+        weight: null,
+        relationType: "",
+      });
+    });
+  }
+
+  if (!edges.length) throw new Error("CSV'de kenar bulunamadi");
+  return { nodesMap, edges };
+}
+
+function parseCsv(text) {
+  const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  if (!lines.length) throw new Error("CSV bos");
+  const header = splitCsvLine(lines.shift() || "").map(normalizeHeader);
+  if (header.includes("source_id")) {
+    return parseEdgeCsv(lines, header);
+  }
+  if (header.includes("dugumid")) {
+    return parseNodeCsv(lines, header);
+  }
+  throw new Error("CSV basliklari hatali");
 }
 
 async function getGraphDataFromItem(item) {
@@ -1227,9 +1508,14 @@ function loadGraphData(nodesMap, edges) {
   resetColoringUI();
   renderer.clearHighlights();
   graph.reset();
-  nodesMap.forEach((label, id) => {
+  nodesMap.forEach((node, id) => {
     try {
-      graph.addNode(id, label);
+      const label = typeof node === "string" ? node : node?.label || id;
+      const attributes =
+        typeof node === "string"
+          ? { activity: null, interaction: null, connectionCount: null }
+          : node?.attributes || {};
+      graph.addNode(id, label, attributes);
     } catch (err) {
       // ignore duplicates
     }
@@ -1267,17 +1553,31 @@ function formatEdge(a, b) {
   return `${x} <-> ${y}`;
 }
 
+function formatWeight(weight) {
+  if (weight === null || weight === undefined) return "";
+  const num = Number(weight);
+  if (!Number.isFinite(num)) return "";
+  if (Number.isInteger(num)) return String(num);
+  return num.toFixed(4);
+}
+
 function buildAlgorithmPayload(startId) {
   if (!startId.trim()) {
     throw new Error("Baslangic dugumu bos olamaz");
   }
-  const nodes = Array.from(graph.nodes.entries()).map(([id, label]) => ({
+  graph.recalculateWeights();
+  const nodes = Array.from(graph.nodes.entries()).map(([id, node]) => ({
     id,
-    label,
+    label: node?.label || id,
+    activity: node?.attributes?.activity ?? null,
+    interaction: node?.attributes?.interaction ?? null,
+    connection_count: node?.attributes?.connectionCount ?? null,
   }));
   const edges = graph.edges.map((e) => ({
     from: e.from,
     to: e.to,
+    relation_type: e.relationType || "",
+    relation_degree: e.weight ?? null,
   }));
   return { start_id: startId.trim(), graph: { nodes, edges } };
 }
@@ -1295,8 +1595,23 @@ function mergeGraphData(baseParsed, otherParsed) {
     }
   });
 
-  otherParsed.nodesMap.forEach((label, id) => {
-    if (!nodesMap.has(id)) nodesMap.set(id, label);
+  otherParsed.nodesMap.forEach((node, id) => {
+    if (!nodesMap.has(id)) {
+      nodesMap.set(id, node);
+      return;
+    }
+    const existing = nodesMap.get(id);
+    nodesMap.set(id, {
+      label: existing?.label || node?.label || id,
+      attributes: {
+        activity: existing?.attributes?.activity ?? node?.attributes?.activity ?? null,
+        interaction: existing?.attributes?.interaction ?? node?.attributes?.interaction ?? null,
+        connectionCount:
+          existing?.attributes?.connectionCount
+          ?? node?.attributes?.connectionCount
+          ?? null,
+      },
+    });
   });
 
   otherParsed.edges.forEach((e) => {

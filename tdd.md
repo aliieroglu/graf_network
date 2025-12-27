@@ -225,12 +225,16 @@ DugumId,Ozellik_I,Ozellik_II,Ozellik_III,Komsular
 İki düğüm arasındaki ağırlık (maliyet) şu formülle hesaplanır: 
 
 [
-Ağırlık_{i,j} = \frac{1}{1 + (Aktiflik_i - Aktiflik_j)^2 + (Etkileşim_i - Etkileşim_j)^2 + (Bağlantı_i - Bağlantı_j)^2}
+Agirlik_{i,j} = \frac{1}{1 + \sqrt{(Aktiflik_i - Aktiflik_j)^2 
++ (Etkilesim_i - Etkilesim_j)^2 
++ (Baglanti_i - Baglanti_j)^2}}
+
 ]
 
 * Benzer özelliklere sahip düğümler için uzaklık küçük, ağırlık büyük olur.
 * Farklar arttıkça ağırlık azalır.
 * `WeightCalculator` sınıfı bu hesabı kapsüller; tüm algoritmalar kenar maliyeti olarak bu değeri kullanır.
+* Komsular sutunu otomatik kenar olusturmak icin kullanilir.
 
 ---
 

@@ -18,7 +18,7 @@ class BFSAlgorithm(Algorithm):
         while queue:
             current = queue.popleft()
             order.append(current)
-            for neighbor in sorted(graph.neighbors(current)):
+            for neighbor in graph.neighbors_sorted_by_weight(current, descending=True):
                 if neighbor not in visited:
                     visited.add(neighbor)
                     queue.append(neighbor)

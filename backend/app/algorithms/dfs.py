@@ -19,8 +19,8 @@ class DFSAlgorithm(Algorithm):
                 continue
             visited.add(current)
             order.append(current)
-            # Reverse sorted for deterministic order
-            for neighbor in sorted(graph.neighbors(current), reverse=True):
+            neighbors = graph.neighbors_sorted_by_weight(current, descending=True)
+            for neighbor in reversed(neighbors):
                 if neighbor not in visited:
                     stack.append(neighbor)
 

@@ -30,7 +30,7 @@
           </ul>
           <button id="merge-files" type="button" class="ghost fullwidth tiny-btn merge-btn">
             <ion-icon name="git-merge-outline"></ion-icon>
-            Merge secili iki dosya
+            Merge
           </button>
         </section>
 
@@ -76,7 +76,10 @@
               <div class="node-info-list">
                 <div class="info-item"><span>ID</span><strong id="node-info-id">-</strong></div>
                 <div class="info-item"><span>Etiket</span><strong id="node-info-name">-</strong></div>
-                <div class="info-item"><span>Baglanti</span><strong id="node-info-degree">-</strong></div>
+                <div class="info-item"><span>Aktiflik</span><strong id="node-info-activity">-</strong></div>
+                <div class="info-item"><span>Etkilesim</span><strong id="node-info-interaction">-</strong></div>
+                <div class="info-item"><span>Baglanti Ozelligi</span><strong id="node-info-connection">-</strong></div>
+                <div class="info-item"><span>Baglanti (Derece)</span><strong id="node-info-degree">-</strong></div>
                 <div class="info-item"><span>Komsular</span><strong id="node-info-neighbors">-</strong></div>
               </div>
             </div>
@@ -90,6 +93,17 @@
               <label>Etiket
                 <input name="label" placeholder="Gosterilecek ad (istege bagli)">
               </label>
+              <div class="grid-3">
+                <label>Aktiflik (0-1)
+                  <input name="activity" type="number" step="0.01" min="0" max="1" required>
+                </label>
+                <label>Etkilesim
+                  <input name="interaction" type="number" step="0.01" min="0" required>
+                </label>
+                <label>Baglanti Sayisi
+                  <input name="connection" type="number" step="1" min="0" required>
+                </label>
+              </div>
               <button type="submit">Dugum ekle</button>
             </form>
           </section>
@@ -104,7 +118,7 @@
                 <input name="to" required placeholder="orn. B">
               </label>
               <label>Agirlik
-                <input name="weight" type="number" step="any" placeholder="Istege bagli">
+                <input name="weight" type="number" step="any" placeholder="Otomatik hesaplanir" disabled>
               </label>
               <button type="submit">Kenar ekle</button>
             </form>

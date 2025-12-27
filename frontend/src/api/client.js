@@ -54,3 +54,7 @@ export async function deleteGraph(graphId) {
 export function getGraphExportUrl(graphId) {
   return `${API_BASE}/graphs/${graphId}/export`;
 }
+
+export function getGraphNodesExportUrl(graphId) {
+  return `${API_BASE}/graphs/${graphId}/export-nodes`;
+}

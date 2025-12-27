@@ -8,7 +8,14 @@ class WelshPowellColoring(ColoringAlgorithm):
         if not node_ids:
             return ColoringResult({})
 
-        ordered = sorted(node_ids, key=lambda node_id: (-graph.degree(node_id), node_id))
+        ordered = sorted(
+            node_ids,
+            key=lambda node_id: (
+                -graph.weighted_degree(node_id),
+                -graph.degree(node_id),
+                node_id,
+            ),
+        )
         colors = {}
 
         for node_id in ordered:

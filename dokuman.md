@@ -102,13 +102,17 @@ Her düğüm, sayısal özellikleriyle bir **CSV tablosunda** tutulmalıdır:
 
 ```
 
-$$Agirlik_{i,j}=1+\sqrt{(Aktiflik_{i}-Aktiflik_{j})^{2}+(Etkilesim_{i}-Etkilesim_{j})^{2}+(Baglanti_{i}-Baglanti_{j})^{2}} 
+Agirlik_{i,j} = \frac{1}{1 + \sqrt{(Aktiflik_i - Aktiflik_j)^2 
++ (Etkilesim_i - Etkilesim_j)^2 
++ (Baglanti_i - Baglanti_j)^2}}
+
 
 ```
 
 * Benzer özelliklere sahip düğümlerde ağırlık yüksek olur.
 * Farklı özelliklerde uzaklık artar, ağırlık düşer.
 * Hesaplanan ağırlık tüm algoritmalarda **kenar maliyeti** olarak kullanılacaktır.
+* Komsular sutunu otomatik kenar olusturmak icin kullanilir.
 
 ---
 

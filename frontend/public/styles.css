@@ -187,6 +187,12 @@ a.ghost {
 .stack { display: flex; flex-direction: column; gap: 10px; }
 .stack > button { margin-top: 6px; }
 
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+}
+
 .section-heading {
   display: flex;
   justify-content: space-between;

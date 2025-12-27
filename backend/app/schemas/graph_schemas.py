@@ -6,6 +6,9 @@ from pydantic import BaseModel, Field
 class GraphNode(BaseModel):
     id: str
     label: Optional[str] = None
+    activity: Optional[float] = None
+    interaction: Optional[float] = None
+    connection_count: Optional[int] = None
 
 
 class GraphEdge(BaseModel):

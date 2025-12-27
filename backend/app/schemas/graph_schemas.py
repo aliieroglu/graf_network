@@ -1,6 +1,7 @@
 from typing import Dict, List, Optional
 
 from pydantic import BaseModel, Field
+from pydantic.config import ConfigDict
 
 
 class GraphNode(BaseModel):
@@ -12,6 +13,7 @@ class GraphNode(BaseModel):
 
 
 class GraphEdge(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
     from_id: str = Field(..., alias="from")
     to_id: str = Field(..., alias="to")
     relation_type: Optional[str] = None

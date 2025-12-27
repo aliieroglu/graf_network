@@ -185,6 +185,7 @@ a.ghost {
 }
 
 .stack { display: flex; flex-direction: column; gap: 10px; }
+.stack > button { margin-top: 6px; }
 
 .section-heading {
   display: flex;
@@ -242,6 +243,30 @@ a.ghost {
   display: flex;
   align-items: center;
   gap: 6px;
+}
+
+.icon-btn {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  color: #fca5a5;
+  border-color: rgba(248, 113, 113, 0.6);
+}
+
+.icon-btn:hover {
+  color: #fecaca;
+  border-color: rgba(248, 113, 113, 0.9);
+}
+
+.saved-list-wrap {
+  margin-top: 12px;
+  max-height: 220px;
+  overflow-y: auto;
+  border-radius: 12px;
 }
 
 .saved-actions a {
@@ -454,6 +479,32 @@ a.ghost {
   background: rgba(56, 189, 248, 0.15);
 }
 .output .row:last-child { border-bottom: none; }
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.72);
+  display: grid;
+  place-items: center;
+  z-index: 30;
+}
+
+.modal-card {
+  width: min(360px, 90vw);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow: var(--shadow);
+}
+
+.modal-card h3 { margin-top: 0; }
+.modal-actions {
+  margin-top: 16px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
 
 /* Modern scrollbar */
 *::-webkit-scrollbar {

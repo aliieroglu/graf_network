@@ -45,6 +45,12 @@ export async function loadGraph(graphId) {
   return request(`/graphs/${graphId}`);
 }
 
+export async function deleteGraph(graphId) {
+  return request(`/graphs/${graphId}`, {
+    method: "DELETE",
+  });
+}
+
 export function getGraphExportUrl(graphId) {
   return `${API_BASE}/graphs/${graphId}/export`;
 }

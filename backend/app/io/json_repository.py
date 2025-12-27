@@ -70,3 +70,11 @@ def get_graph(graph_id: str) -> Dict[str, Any]:
         if record.get("id") == graph_id:
             return record
     raise KeyError(f"Graph not found: {graph_id}")
+
+
+def delete_graph(graph_id: str) -> None:
+    records = _read_store()
+    remaining = [record for record in records if record.get("id") != graph_id]
+    if len(remaining) == len(records):
+        raise KeyError(f"Graph not found: {graph_id}")
+    _write_store(remaining)

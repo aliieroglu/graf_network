@@ -42,9 +42,11 @@
             </label>
             <button id="save-graph" type="submit">Kaydet</button>
           </form>
-          <ul id="saved-list" class="list compact">
-            <li class="muted">Henuz kayit yok</li>
-          </ul>
+          <div class="saved-list-wrap">
+            <ul id="saved-list" class="list compact">
+              <li class="muted">Henuz kayit yok</li>
+            </ul>
+          </div>
         </section>
 
         <button id="quick-toggle" class="accordion-toggle" aria-expanded="false">
@@ -220,6 +222,17 @@
         </div>
       </section>
     </main>
+  </div>
+
+  <div id="confirm-overlay" class="modal-overlay" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+      <h3 id="confirm-title">Kaydi sil</h3>
+      <p id="confirm-message" class="muted">Silmek istediginize emin misiniz?</p>
+      <div class="modal-actions">
+        <button id="confirm-cancel" type="button" class="ghost">Iptal</button>
+        <button id="confirm-approve" type="button" class="danger">Sil</button>
+      </div>
+    </div>
   </div>
 
   <script src="../src/main.js" type="module"></script>

@@ -1,6 +1,12 @@
 ﻿import { createVisRenderer } from "./graph/visNetworkGraph.js";
 import { runAlgorithm, runColoring } from "./api/client.js";
-import { getGraphExportUrl, listGraphs, loadGraph, saveGraph } from "./api/client.js";
+import {
+  deleteGraph,
+  getGraphExportUrl,
+  listGraphs,
+  loadGraph,
+  saveGraph,
+} from "./api/client.js";
 
 class Graph {
   constructor() {
@@ -114,6 +120,10 @@ const coloringRunBtn = document.getElementById("coloring-run");
 const coloringStatus = document.getElementById("coloring-status");
 const coloringLegend = document.getElementById("coloring-legend");
 const coloringResults = document.getElementById("coloring-results");
+const confirmOverlay = document.getElementById("confirm-overlay");
+const confirmMessage = document.getElementById("confirm-message");
+const confirmCancel = document.getElementById("confirm-cancel");
+const confirmApprove = document.getElementById("confirm-approve");
 const quickToggle = document.getElementById("quick-toggle");
 const quickPanel = document.getElementById("quick-panel");
 const selectedRow = document.getElementById("selected-row");
@@ -146,6 +156,10 @@ const simState = {
   stepIndex: 0,
   algorithm: null,
   speed: 1,
+};
+const confirmState = {
+  action: null,
+  id: null,
 };
 const COLOR_PALETTE = [
   "#22c55e",
@@ -768,6 +782,42 @@ async function applyColoring() {
   }
 }
 
+function openConfirm(message, action, id) {
+  if (!confirmOverlay) return;
+  confirmState.action = action;
+  confirmState.id = id;
+  if (confirmMessage) confirmMessage.textContent = message;
+  confirmOverlay.hidden = false;
+}
+
+function closeConfirm() {
+  if (!confirmOverlay) return;
+  confirmOverlay.hidden = true;
+  confirmState.action = null;
+  confirmState.id = null;
+}
+
+function promptDelete(record) {
+  const label = record.name || record.id;
+  openConfirm(`"${label}" kaydini silmek istediginize emin misiniz?`, "delete", record.id);
+}
+
+async function handleConfirmApprove() {
+  if (confirmState.action !== "delete" || !confirmState.id) {
+    closeConfirm();
+    return;
+  }
+  try {
+    await deleteGraph(confirmState.id);
+    closeConfirm();
+    await refreshSavedGraphs();
+    setResult("Kayit silindi");
+  } catch (err) {
+    closeConfirm();
+    setResult(err.message || "Silme hatasi", true);
+  }
+}
+
 function renderSavedList(records) {
   if (!savedList) return;
   savedList.innerHTML = "";
@@ -807,8 +857,17 @@ function renderSavedList(records) {
     exportLink.href = getGraphExportUrl(record.id);
     exportLink.setAttribute("download", `${toSafeFilename(record.name, "graf")}.csv`);
 
+    const deleteBtn = document.createElement("button");
+    deleteBtn.type = "button";
+    deleteBtn.className = "ghost tiny-btn icon-btn";
+    deleteBtn.textContent = "X";
+    deleteBtn.setAttribute("aria-label", "Kaydi sil");
+    deleteBtn.title = "Sil";
+    deleteBtn.addEventListener("click", () => promptDelete(record));
+
     actions.appendChild(loadBtn);
     actions.appendChild(exportLink);
+    actions.appendChild(deleteBtn);
     li.appendChild(meta);
     li.appendChild(actions);
     savedList.appendChild(li);
@@ -914,6 +973,12 @@ if (saveForm)
     }
   });
 if (coloringRunBtn) coloringRunBtn.addEventListener("click", applyColoring);
+if (confirmCancel) confirmCancel.addEventListener("click", closeConfirm);
+if (confirmApprove) confirmApprove.addEventListener("click", handleConfirmApprove);
+if (confirmOverlay)
+  confirmOverlay.addEventListener("click", (event) => {
+    if (event.target === confirmOverlay) closeConfirm();
+  });
 
 nodeForm.addEventListener("submit", (e) => {
   e.preventDefault();

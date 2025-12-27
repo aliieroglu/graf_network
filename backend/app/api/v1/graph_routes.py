@@ -61,3 +61,12 @@ def export_graph(graph_id: str):
     filename = f"{_safe_filename(name, graph_id)}.csv"
     headers = {"Content-Disposition": f'attachment; filename="{filename}"'}
     return Response(content=csv_text, media_type="text/csv", headers=headers)
+
+
+@router.delete("/{graph_id}")
+def delete_graph(graph_id: str):
+    try:
+        json_repository.delete_graph(graph_id)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail="Kayit bulunamadi") from exc
+    return {"status": "deleted"}

@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -27,6 +27,15 @@ class AlgorithmRequest(BaseModel):
 
 class AlgorithmResponse(BaseModel):
     order: List[str]
+
+
+class GraphRequest(BaseModel):
+    graph: GraphPayload
+
+
+class ColoringResponse(BaseModel):
+    colors: Dict[str, int]
+    color_count: int
 
 
 class GraphSaveRequest(BaseModel):

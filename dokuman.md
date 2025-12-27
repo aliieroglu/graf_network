@@ -178,3 +178,11 @@ Aşağıdaki bölümleri içermelidir:
 * GitHub’a düzenli commit yapmayan → **0 puan**
 * OOP prensiplerine uymayan → **0 puan**
 
+
+---
+
+## Ek: Projede Uygulanan OOP Sinif Yapisi
+- Domain siniflari: Node, Edge, Graph (dugum/kenar modeli ve komsuluk listesi).
+- Algoritma soyutlamalari: Algorithm (ABC) ve Coloring (ABC); cikis tipleri AlgorithmResult ve ColoringResult.
+- Somut algoritmalar: BFSAlgorithm, DFSAlgorithm, WelshPowellColoring.
+- Algoritmalar servis katmaninda cagrilir ve API uzerinden tetiklenir.

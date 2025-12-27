@@ -1,6 +1,11 @@
 from fastapi import APIRouter, HTTPException
 
-from backend.app.schemas.graph_schemas import AlgorithmRequest, AlgorithmResponse
+from backend.app.schemas.graph_schemas import (
+    AlgorithmRequest,
+    AlgorithmResponse,
+    ColoringResponse,
+    GraphRequest,
+)
 from backend.app.services import graph_service
 
 router = APIRouter(prefix="/algorithms", tags=["algorithms"])
@@ -18,5 +23,13 @@ def run_bfs(req: AlgorithmRequest):
 def run_dfs(req: AlgorithmRequest):
     try:
         return graph_service.run_dfs(req)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.post("/coloring/welsh-powell", response_model=ColoringResponse)
+def run_welsh_powell(req: GraphRequest):
+    try:
+        return graph_service.run_welsh_powell(req)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc

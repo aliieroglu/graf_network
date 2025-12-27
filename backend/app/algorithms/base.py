@@ -1,4 +1,5 @@
-from typing import List
+from abc import ABC, abstractmethod
+from typing import Dict, List
 
 from backend.app.domain.graph import Graph
 
@@ -11,6 +12,30 @@ class AlgorithmResult:
         return {"order": self.order}
 
 
-class BaseAlgorithm:
+class Algorithm(ABC):
+    @abstractmethod
     def run(self, graph: Graph, start_id: str) -> AlgorithmResult:
         raise NotImplementedError
+
+
+class ColoringResult:
+    def __init__(self, colors: Dict[str, int]):
+        self.colors = colors
+
+    @property
+    def color_count(self) -> int:
+        return len(set(self.colors.values()))
+
+    def dict(self):
+        return {"colors": self.colors, "color_count": self.color_count}
+
+
+class Coloring(ABC):
+    @abstractmethod
+    def run(self, graph: Graph) -> ColoringResult:
+        raise NotImplementedError
+
+
+BaseAlgorithm = Algorithm
+ColoringAlgorithm = Coloring
+BaseColoringAlgorithm = Coloring
